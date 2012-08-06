@@ -63,6 +63,13 @@ class StripeBackend(object):
             else: 
                 raise ConfigError('You must set SHOP_STRIPE_PRIVATE_KEY in your configuration file.')
 
+            # If we're logged in, save the transaction token for use again later. Sweet.
+            if request.user.is_authenticated() and request.user.get_profile().stripe_customer_id == '': 
+                customer = stripe.Customer.create(card=card_token, description=description)
+                request.user.get_profile().stripe_customer_id=customer.id
+                request.user.get_profile().save()
+                customer_id = customer.id
+                
             if not customer_id:
                 stripe_dict = {
                     'amount':amount,
@@ -81,12 +88,6 @@ class StripeBackend(object):
             transaction_id = charge.id
 
             self.shop.confirm_payment(self.shop.get_order_for_id(order_id), amount, transaction_id, self.backend_name)
-
-            # If we're logged in, save the transaction token for use again later. Sweet.
-            if request.user.is_authenticated and request.user.get_profile().stripe_customer_id == None: 
-                customer = stripe.Customer.create(card=card_token, description=description)
-                request.user.get_profile().stripe_customer_id=customer.id
-                request.user.save()
              
         if hasattr(settings, 'SHOP_STRIPE_PUBLISHABLE_KEY'):
             pub_key=settings.SHOP_STRIPE_PUBLISHABLE_KEY
