@@ -42,15 +42,17 @@ class StripeBackend(object):
         )
         return urlpatterns
 
-    def stripe_payment_view(self, request):
+    def stripe_payment_view(self, request, pk):
         if request.POST:
             if request.user.is_authenticated() and request.user.get_profile().stripe_customer_id:
                 customer_id = request.user.get_profile().stripe_customer_id 
             else:
                 customer_id=None
                 card_token = request.POST['stripeToken']
-            order = self.shop.get_order(request)
-            order_id = self.shop.get_order_unique_id(order)
+            #order = self.shop.get_order(request)
+            #order_id = self.shop.get_order_unique_id(order)
+            order_id = pk
+            order = self.shop.get_order_for_id(order_id)
             amount = self.shop.get_order_total(order)
             amount = str(int(amount * 100))
             if request.user.is_authenticated(): description = request.user.email
