@@ -76,7 +76,9 @@ class StripeBackend(object):
                     'customer':customer_id,
                     'description':description,}
             
-            stripe.Charge.create(**stripe_dict)
+            charge = stripe.Charge.create(**stripe_dict)
+            
+            transaction_id = charge.id
 
             self.shop.confirm_payment(self.shop.get_order_for_id(order_id), amount, transaction_id, self.backend_name)
 
